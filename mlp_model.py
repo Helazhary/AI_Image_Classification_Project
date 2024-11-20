@@ -178,7 +178,6 @@ if __name__ == "__main__":
     print(f"Recall: {recall:.2f}")
 
 
-ouput
 ----------------------------------------------
 Performance Summary:
    Metric                               Score
