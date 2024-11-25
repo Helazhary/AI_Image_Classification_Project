@@ -24,7 +24,7 @@ import seaborn as sns
 from sklearn.metrics import confusion_matrix
 
 
-# this function serves as a definition of the MLP model
+# this function serves as a definition of the MLP model, it holds 3 layers
 class MLP(nn.Module):
     def __init__(self, input_size=50, hidden_size1=512, hidden_size2=512, output_size=10):
         super(MLP, self).__init__()
@@ -35,6 +35,41 @@ class MLP(nn.Module):
             nn.BatchNorm1d(hidden_size2),
             nn.ReLU(),
             nn.Linear(hidden_size2, output_size)
+        )
+
+    def forward(self, x):
+        return self.model(x)
+
+
+# 2 new classes will serve as experimentation for adding/removing layers to the model & annotating the differences
+# remove 1 layer --> 2 layers
+class ShallowMLP(nn.Module):
+    def __init__(self, input_size=50, hidden_size=256, output_size=10):
+        super(ShallowMLP, self).__init__()
+        self.model = nn.Sequential(
+            nn.Linear(input_size, hidden_size),
+            nn.ReLU(),
+            nn.Linear(hidden_size, output_size)
+        )
+
+    def forward(self, x):
+        return self.model(x)
+
+
+# add 1 layer --> 4 layers
+class DeepMLP(nn.Module):
+    def __init__(self, input_size=50, hidden_size=512, output_size=10):
+        super(DeepMLP, self).__init__()
+        self.model = nn.Sequential(
+            nn.Linear(input_size, hidden_size),
+            nn.ReLU(),
+            nn.Linear(hidden_size, hidden_size),
+            nn.BatchNorm1d(hidden_size),
+            nn.ReLU(),
+            nn.Linear(hidden_size, hidden_size),
+            nn.BatchNorm1d(hidden_size),
+            nn.ReLU(),
+            nn.Linear(hidden_size, output_size)
         )
 
     def forward(self, x):
@@ -105,23 +140,47 @@ def evaluate_model(model, test_loader, device):
             all_preds.extend(preds.cpu().numpy())
             all_labels.extend(labels.numpy())
 
-    # return MLP model accuracy, confusion matrix, precision & recall
+    # metrics for future analysis
     accuracy = accuracy_score(all_labels, all_preds)
     cm = confusion_matrix(all_labels, all_preds)
     precision = precision_score(all_labels, all_preds, average='weighted')
     recall = recall_score(all_labels, all_preds, average='weighted')
+    f1 = f1_score(all_labels, all_preds, average='weighted')  # Compute the F1 score
 
-    # performance summary table
+    # make a performance summary table
     performance_summary = pd.DataFrame({
         'Metric': ['Accuracy', 'Precision', 'Recall', 'F1-Score'],
         'Score': [accuracy, precision, recall, f1]
     })
 
-    # output the performance summary table created
+    # Output the performance summary table
     print("\nPerformance Summary:")
     print(performance_summary.to_string(index=False))
 
     return accuracy, cm, precision, recall
+
+
+# training and evaluation function
+def train_and_evaluate(mlp_class, model_name):
+    print(f"\nCurrently training and evaluating: {model_name}")
+    model = mlp_class().to(device)  # Initialize the model
+    optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)  # Optimizer
+    criterion = nn.CrossEntropyLoss()  # Loss function
+
+    # train our model
+    for epoch in range(num_epochs):
+        train_model(model, train_loader, criterion, optimizer, device)
+        print(f"Epoch [{epoch + 1}/{num_epochs}] completed for {model_name}.")
+
+    # print the model metrics evaluations
+    accuracy, cm, precision, recall = evaluate_model(model, test_loader, device)
+    print(f"Final Results for {model_name}:")
+    print(f"Accuracy: {accuracy:.2f}")
+    print(f"Confusion Matrix:\n{cm}")
+    print(f"Precision: {precision:.2f}")
+    print(f"Recall: {recall:.2f}")
+
+    return accuracy
 
 
 # function that will plot confusion matrix
@@ -152,52 +211,192 @@ def plot_confusion_matrix(model, test_loader, device, class_names):
 
 # main function to train and evaluate the MLP
 if __name__ == "__main__":
-    # prepare all data
+    # prepare dataset
     train_loader, test_loader, device = prepare_data()
 
-    # prepare the model
-    model = MLP().to(device)
-
-    # prepare the loss + optimizer functions
-    criterion = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
-    # using the SGD optimizer with momentum=0.9 as specified in the project outline
-
-    # train model for x amount of epochs
+    # number of epochs
     num_epochs = 20
-    for epoch in range(num_epochs):
-        train_model(model, train_loader, criterion, optimizer, device)
-        print(f"Epoch [{epoch + 1}/{num_epochs}] completed.")
 
-    # output the evaluation of our model
-    accuracy, cm, precision, recall = evaluate_model(model, test_loader, device)
-    print(f"Accuracy: {accuracy:.2f}")
-    print("Confusion Matrix:")
-    print(cm)
-    print(f"Precision: {precision:.2f}")
-    print(f"Recall: {recall:.2f}")
+    # all 3 models (base + variants)
+    models = [
+        (MLP, "Base MLP (3 Layers)"),
+        (ShallowMLP, "Shallow MLP Variant (2 Layers)"),
+        (DeepMLP, "Deep MLP Variant (4 Layers)")
+    ]
+
+    # Store results
+    results = []
+
+    # train each model + show results
+    for model_class, name in models:
+        acc = train_and_evaluate(model_class, name)
+        results.append((name, acc))
+
+    # collect all results
+    import pandas as pd
+    results_df = pd.DataFrame(results, columns=["Model", "Accuracy"])
+    print("\nExperiment Results:")
+    print(results_df)
+
+    # plot results
+    import matplotlib.pyplot as plt
+    names, accuracies = zip(*results)
+    plt.bar(names, accuracies)
+    plt.xlabel("Model")
+    plt.ylabel("Accuracy")
+    plt.title("Comparison of Model Depths")
+    plt.xticks(rotation=45)
+    plt.show()
 
 
-----------------------------------------------
+OUTPUT
+__________________________________________________________________
+
+Currently training and evaluating: Base MLP (3 Layers)
+Epoch [1/20] completed for Base MLP (3 Layers).
+Epoch [2/20] completed for Base MLP (3 Layers).
+Epoch [3/20] completed for Base MLP (3 Layers).
+Epoch [4/20] completed for Base MLP (3 Layers).
+Epoch [5/20] completed for Base MLP (3 Layers).
+Epoch [6/20] completed for Base MLP (3 Layers).
+Epoch [7/20] completed for Base MLP (3 Layers).
+Epoch [8/20] completed for Base MLP (3 Layers).
+Epoch [9/20] completed for Base MLP (3 Layers).
+Epoch [10/20] completed for Base MLP (3 Layers).
+Epoch [11/20] completed for Base MLP (3 Layers).
+Epoch [12/20] completed for Base MLP (3 Layers).
+Epoch [13/20] completed for Base MLP (3 Layers).
+Epoch [14/20] completed for Base MLP (3 Layers).
+Epoch [15/20] completed for Base MLP (3 Layers).
+Epoch [16/20] completed for Base MLP (3 Layers).
+Epoch [17/20] completed for Base MLP (3 Layers).
+Epoch [18/20] completed for Base MLP (3 Layers).
+Epoch [19/20] completed for Base MLP (3 Layers).
+Epoch [20/20] completed for Base MLP (3 Layers).
+
 Performance Summary:
-   Metric                               Score
- Accuracy                               0.766
-Precision                            0.766245
-   Recall                               0.766
- F1-Score 
-----------------------------------------------
-Accuracy: 0.77
-Precision: 0.77
-Recall: 0.77
-----------------------------------------------
+   Metric    Score
+ Accuracy 0.758000
+Precision 0.761611
+   Recall 0.758000
+ F1-Score 0.758444
+                       
+Final Results for Base MLP (3 Layers):
+Accuracy: 0.76
+Precision: 0.76
+Recall: 0.76
+                       
 Confusion Matrix:
-[[78  1  1  1  2  0  0  1 13  3]
- [ 2 81  0  3  0  0  0  0  3 11]
- [ 5  1 61  5  7  7 12  2  0  0]
- [ 0  1  5 62  3 18  9  0  1  1]
- [ 1  0  7  5 75  2  2  7  1  0]
- [ 1  0  3 16  4 69  2  3  2  0]
- [ 1  1  1  4  1  5 86  0  1  0]
- [ 2  2  0  3  7  2  1 83  0  0]
- [ 7  4  2  1  0  0  0  0 85  1]
- [ 2 10  0  0  0  0  0  0  2 86]]
+[[74  1  4  3  1  0  0  1 11  5]
+ [ 2 79  1  2  0  0  0  0  4 12]
+ [ 6  1 60  7  8  8  9  1  0  0]
+ [ 0  3  5 64  4 15  6  0  1  2]
+ [ 0  1  3  9 76  3  1  7  0  0]
+ [ 0  1  5 18  3 71  2  0  0  0]
+ [ 0  0  4  6  0  4 85  0  0  1]
+ [ 4  0  0  5  8  2  0 79  1  1]
+ [ 8  3  2  1  0  0  1  0 84  1]
+ [ 1 12  0  0  0  0  0  0  1 86]]
+
+
+Currently training and evaluating: Shallow MLP (2 Layers)
+Epoch [1/20] completed for Shallow MLP (2 Layers).
+Epoch [2/20] completed for Shallow MLP (2 Layers).
+Epoch [3/20] completed for Shallow MLP (2 Layers).
+Epoch [4/20] completed for Shallow MLP (2 Layers).
+Epoch [5/20] completed for Shallow MLP (2 Layers).
+Epoch [6/20] completed for Shallow MLP (2 Layers).
+Epoch [7/20] completed for Shallow MLP (2 Layers).
+Epoch [8/20] completed for Shallow MLP (2 Layers).
+Epoch [9/20] completed for Shallow MLP (2 Layers).
+Epoch [10/20] completed for Shallow MLP (2 Layers).
+Epoch [11/20] completed for Shallow MLP (2 Layers).
+Epoch [12/20] completed for Shallow MLP (2 Layers).
+Epoch [13/20] completed for Shallow MLP (2 Layers).
+Epoch [14/20] completed for Shallow MLP (2 Layers).
+Epoch [15/20] completed for Shallow MLP (2 Layers).
+Epoch [16/20] completed for Shallow MLP (2 Layers).
+Epoch [17/20] completed for Shallow MLP (2 Layers).
+Epoch [18/20] completed for Shallow MLP (2 Layers).
+Epoch [19/20] completed for Shallow MLP (2 Layers).
+Epoch [20/20] completed for Shallow MLP (2 Layers).
+
+Performance Summary:
+   Metric    Score
+ Accuracy 0.782000
+Precision 0.785481
+   Recall 0.782000
+ F1-Score 0.782501
+                      
+Final Results for Shallow MLP (2 Layers):
+Accuracy: 0.78
+Precision: 0.79
+Recall: 0.78
+
+Confusion Matrix:
+[[80  1  1  1  2  0  0  1  9  5]
+ [ 3 80  1  1  0  0  0  0  3 12]
+ [ 5  0 70  5  3  5 12  0  0  0]
+ [ 1  1  5 69  4 12  7  0  1  0]
+ [ 1  0  7  6 74  4  2  5  1  0]
+ [ 0  0  6 18  1 71  2  1  1  0]
+ [ 1  1  3  8  0  3 83  0  1  0]
+ [ 2  0  1  3 10  3  0 79  1  1]
+ [ 9  3  2  0  0  0  0  0 85  1]
+ [ 0  6  0  0  0  0  0  0  3 91]]
+
+
+Currently training and evaluating: Deep MLP (4 Layers)
+Epoch [1/20] completed for Deep MLP (4 Layers).
+Epoch [2/20] completed for Deep MLP (4 Layers).
+Epoch [3/20] completed for Deep MLP (4 Layers).
+Epoch [4/20] completed for Deep MLP (4 Layers).
+Epoch [5/20] completed for Deep MLP (4 Layers).
+Epoch [6/20] completed for Deep MLP (4 Layers).
+Epoch [7/20] completed for Deep MLP (4 Layers).
+Epoch [8/20] completed for Deep MLP (4 Layers).
+Epoch [9/20] completed for Deep MLP (4 Layers).
+Epoch [10/20] completed for Deep MLP (4 Layers).
+Epoch [11/20] completed for Deep MLP (4 Layers).
+Epoch [12/20] completed for Deep MLP (4 Layers).
+Epoch [13/20] completed for Deep MLP (4 Layers).
+Epoch [14/20] completed for Deep MLP (4 Layers).
+Epoch [15/20] completed for Deep MLP (4 Layers).
+Epoch [16/20] completed for Deep MLP (4 Layers).
+Epoch [17/20] completed for Deep MLP (4 Layers).
+Epoch [18/20] completed for Deep MLP (4 Layers).
+Epoch [19/20] completed for Deep MLP (4 Layers).
+Epoch [20/20] completed for Deep MLP (4 Layers).
+
+Performance Summary:
+   Metric    Score
+ Accuracy 0.777000
+Precision 0.775489
+   Recall 0.777000
+ F1-Score 0.775275
+                      
+Final Results for Deep MLP (4 Layers):
+Accuracy: 0.78
+Precision: 0.78
+Recall: 0.78
+                      
+Confusion Matrix:
+[[77  1  3  1  1  1  0  1 10  5]
+ [ 2 84  1  0  0  0  0  0  4  9]
+ [ 6  1 65  5  6  7  6  1  3  0]
+ [ 1  1  3 61  6 17  7  4  0  0]
+ [ 1  0  7  9 69  2  2  8  1  1]
+ [ 0  0  5 11  3 73  2  4  2  0]
+ [ 1  0  3  6  1  4 84  0  1  0]
+ [ 2  0  1  3  2  0  0 88  0  4]
+ [ 7  2  2  0  0  0  1  0 88  0]
+ [ 0 10  0  0  0  0  0  0  2 88]]
+
+
+Experiment Results:
+                    Model  Accuracy
+0     Base MLP (3 Layers)     0.758
+1  Shallow MLP (2 Layers)     0.782
+2     Deep MLP (4 Layers)     0.777
+
+Process finished with exit code 0
