@@ -2,6 +2,18 @@
 
 ## Files Overview
 
+**dataset.ipynb**:This file converts 32×32×3 RGB images into 50×1 feature vectors using ResNet-18 for extraction and PCA for dimensionality reduction. The File also saves the processed feature vectors and labels for use with Naive Bayes and Decision Tree.
+
+**train_features_pca.npy**, **test_features_pca.npy**, **train_labels.npy**, **test_labels.npy**: The NPY files for the train and test data features and labels. These files are loaded into the naive bayes and decision tree ipynb files.
+
+**naive_bayes__GNB.ipynb**: File that contains 
+
+**naive_bayes__GNB_Scikit.ipynb**: 
+
+**decision_tree.ipynb**: 
+
+**decision_tree_Scikit.ipynb**: 
+
 __________________________________________________________________________________________________________________________________________________________________________________________________
 - **mlp_model.py**: Contains the complete implementation of the base MLP model, the shallow MLP variant, and the deep MLP variant, the training of these models, aswell as their evaluations. 
 
