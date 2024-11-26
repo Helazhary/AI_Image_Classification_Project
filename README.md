@@ -32,6 +32,7 @@ ________________________________________________________________________________
 - **mlp_model.py**: Contains the complete implementation of the base MLP model, the shallow MLP variant, and the deep MLP variant, the training of these models, aswell as their evaluations. 
 
 #Steps to Run the Code
+**NOTE: make sure to remove the "Output" section of the code, as it served as commentary updates to the editor of the code.**
 
 ### 1. Data Preprocessing
 The *prepare_data()* function in **mlp_model.py** loads the CIFAR-10 dataset and extracts the features using the pre-trained ResNet-18 model.
