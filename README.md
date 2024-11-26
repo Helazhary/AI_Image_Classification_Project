@@ -2,19 +2,33 @@
 
 ## Files Overview
 
+## For Naive Bayes and Decision Tree
 **dataset.ipynb**:This file converts 32×32×3 RGB images into 50×1 feature vectors using ResNet-18 for extraction and PCA for dimensionality reduction. The File also saves the processed feature vectors and labels for use with Naive Bayes and Decision Tree.
 
 **train_features_pca.npy**, **test_features_pca.npy**, **train_labels.npy**, **test_labels.npy**: The NPY files for the train and test data features and labels. These files are loaded into the naive bayes and decision tree ipynb files.
 
-**naive_bayes__GNB.ipynb**: File that contains 
 
-**naive_bayes__GNB_Scikit.ipynb**: 
+**naive_bayes__GNB.ipynb**: File that contains the implementation of Gaussian Naive Bayes and the evaulation. 
 
-**decision_tree.ipynb**: 
+**naive_bayes__GNB_Scikit.ipynb**: File that contains the implementation of Gaussian Naive Bayes using Scikit and the evaulation. 
 
-**decision_tree_Scikit.ipynb**: 
+**decision_tree.ipynb**: File that contains the implementation of the Decision Tree and the evaulation. 
+
+**decision_tree_Scikit.ipynb**: File that contains the implementation of the Decision Tree and the evaulation. 
+
+### Running the files: 
+
+1. Make Sure to download Jupyter Notebook Extension On your Visual Studio Code. 
+2. Make Sure to download the following libraries (NumPy, Matplotlib, Scikit-learn)
+3. You will only need to run the following files ( **naive_bayes__GNB.ipynb, naive_bayes__GNB_Scikit.ipynb, decision_tree.ipynb, decision_tree_Scikit.ipynb**)
+4. Each file automatically loads **train_features_pca.npy**, **test_features_pca.npy**, **train_labels.npy**, **test_labels.npy** and starts training the model, predict using the test data and evaulate showing the confusion matrix, and metrics table.
+5. Click On Run All and the whole code will run.
+
+   
+   
 
 __________________________________________________________________________________________________________________________________________________________________________________________________
+## For MLP
 - **mlp_model.py**: Contains the complete implementation of the base MLP model, the shallow MLP variant, and the deep MLP variant, the training of these models, aswell as their evaluations. 
 
 #Steps to Run the Code
@@ -37,6 +51,7 @@ The script prints a summary table of the metrics of each model: accuracy, precis
 Outputs include epoch training logs, confusion matrices, a performance summary table, and an accuracy comparison chart.
 
 __________________________________________________________________________________________________________________________________________________________________________________________________
+## FOr CNN
 - **CNN_Ai_Image_Classificatoin_Project.ipynb:** Contains the complete implementation of the VGG models, training, evaluation, and data preprocessing.
 
 #Steps to Run the Code
