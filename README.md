@@ -51,7 +51,7 @@ The script prints a summary table of the metrics of each model: accuracy, precis
 Outputs include epoch training logs, confusion matrices, a performance summary table, and an accuracy comparison chart.
 
 __________________________________________________________________________________________________________________________________________________________________________________________________
-## FOr CNN
+## For CNN
 - **CNN_Ai_Image_Classificatoin_Project.ipynb:** Contains the complete implementation of the VGG models, training, evaluation, and data preprocessing.
 
 #Steps to Run the Code
